@@ -27,7 +27,7 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: enable auto-merge
-        if: ${{ steps.metadata.outputs.package-ecosystem != 'gitsubmodule' }}
+        if: ${{ steps.metadata.outputs.package-ecosystem != 'submodules' }} # disable Glyph SDK update
         shell: bash
         run:
           gh pr merge --auto --squash "${{ github.event.pull_request.html_url }}"
