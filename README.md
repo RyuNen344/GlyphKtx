@@ -41,7 +41,12 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        maven { url 'https://jitpack.io' }
+        maven { 
+            url 'https://jitpack.io'
+            content {
+                includeGroupByRegex("com.github.RyuNen344.GlyphKtx*")
+            }
+        }
     }
 }
 ```
