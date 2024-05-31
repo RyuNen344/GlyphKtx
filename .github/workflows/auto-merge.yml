@@ -21,6 +21,10 @@ jobs:
       repository-projects: write
     if: ${{ github.actor == 'dependabot[bot]' }}
     steps:
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"
       - name: enable auto-merge
         shell: bash
         run:
