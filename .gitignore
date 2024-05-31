@@ -10,6 +10,7 @@
 *.iml
 .idea/androidTestResultsUserPreferences.xml
 .idea/compiler.xml
+.idea/deploymentTargetSelector.xml
 .idea/.name
 .idea/git_toolbox_prj.xml
 .idea/gradle.xml

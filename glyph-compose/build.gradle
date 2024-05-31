@@ -12,4 +12,5 @@ android.namespace = "io.github.ryunen344.glyph.compose"
 
 dependencies {
     api files("../Glyph-Developer-Kit/sdk/KetchumSDK_Community_20240307.jar")
+    implementation projects.glyphKtx
 }
