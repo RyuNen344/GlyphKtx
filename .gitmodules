@@ -1,0 +1,3 @@
+[submodule "Glyph-Developer-Kit"]
+	path = Glyph-Developer-Kit
+	url = git@github.com:Nothing-Developer-Programme/Glyph-Developer-Kit.git
