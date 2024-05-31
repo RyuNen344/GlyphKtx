@@ -1,0 +1,40 @@
+[versions]
+agp = "8.4.1"
+androidx-test-ext-junit = "1.1.5"
+androidx-test-ext-truth = "1.5.0"
+com-google-truth = "1.4.2"
+desugar_jdk_libs = "2.0.4"
+jackson-databind = "2.17.1"
+jacoco = "0.8.11"
+jsonassert = "1.5.1"
+junit = "4.13.2"
+kotlin = "2.0.0"
+kotlinx-serialization-json = "1.6.3"
+moshi = "1.15.1"
+equalsverifier = "3.16.1"
+org-robolectric = "4.12.2"
+
+[libraries]
+androidx-test-ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidx-test-ext-junit" }
+androidx-test-ext-truth = { group = "androidx.test.ext", name = "truth", version.ref = "androidx-test-ext-truth" }
+com-google-truth-truth = { group = "com.google.truth", name = "truth", version.ref = "com-google-truth" }
+com-google-truth-extensions-truth-java8 = { group = "com.google.truth.extensions", name = "truth-java8-extension", version.ref = "com-google-truth" }
+desugar_jdk_libs = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugar_jdk_libs" }
+jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson-databind" }
+jsonassert = { module = "org.skyscreamer:jsonassert", version.ref = "jsonassert" }
+junit = { group = "junit", name = "junit", version.ref = "junit" }
+kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization-json" }
+moshi = { module = "com.squareup.moshi:moshi", version.ref = "moshi" }
+moshi-codegen = { module = "com.squareup.moshi:moshi-kotlin-codegen", version.ref = "moshi" }
+nl-jqno-equalsverifier-equalsverifier = { module = "nl.jqno.equalsverifier:equalsverifier", version.ref = "equalsverifier" }
+org-robolectric-robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "org-robolectric" }
+
+[plugins]
+com-android-application = { id = "com.android.application", version.ref = "agp" }
+com-android-library = { id = "com.android.library", version.ref = "agp" }
+com-google-devtools-ksp = { id = "com.google.devtools.ksp", version = "2.0.0-1.0.21" }
+nexus-publish = { id = "io.github.gradle-nexus.publish-plugin", version = "2.0.0" }
+org-jetbrains-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+org-jetbrains-kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+org-jetbrains-kotlinx-compatibility = { id = "org.jetbrains.kotlinx.binary-compatibility-validator", version = "0.14.0" }

@@ -1,0 +1,71 @@
+name: stability
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/gradle
+      - name: check publish task
+        shell: bash
+        run: |
+          ./gradlew publishReleasePublicationToLocalRepository --scan
+
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: read
+      checks: write
+      pull-requests: write
+    strategy:
+      fail-fast: false
+      matrix:
+        module: [ "glyph-ktx", "glyph-compose" ]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/gradle
+      - name: unit test
+        shell: bash
+        run: |
+          ./gradlew :${{ matrix.module }}:testDebugUnitTest --scan
+      - uses: EnricoMi/publish-unit-test-result-action@v2
+        if: ${{ !cancelled() }}
+        with:
+          check_name: ${{ matrix.module }}
+          files: |
+            **/test-results/**/*.xml
+      - name: jacoco
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          ./gradlew :${{ matrix.module }}:jacoco --scan
+      - uses: madrapps/jacoco-report@v1.6.1
+        if: ${{ !cancelled() }}
+        with:
+          paths: |
+            ${{ github.workspace }}/${{ matrix.module }}/build/reports/jacoco/jacoco/jacoco.xml
+          title: ${{ matrix.module }}
+          update-comment: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+          min-coverage-overall: 0
+          min-coverage-changed-files: 0
+
+  api:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/gradle
+      - name: check api file
+        shell: bash
+        run: |
+          ./gradlew apiCheck --scan

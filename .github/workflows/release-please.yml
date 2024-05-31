@@ -1,0 +1,53 @@
+name: release-please
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: google-github-actions/release-please-action@v4
+        id: release
+      - uses: actions/checkout@v4
+        if: ${{ steps.release.outputs.release_created }}
+      - uses: ./.github/actions/gradle
+        if: ${{ steps.release.outputs.release_created }}
+      - name: generate artifacts
+        if: ${{ steps.release.outputs.release_created }}
+        env:
+          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+          PGP_KEY_ID: ${{ secrets.PGP_KEY_ID }}
+          PGP_SIGNING_KEY: ${{ secrets.PGP_SIGNING_KEY }}
+          PGP_SIGNING_PASSWORD: ${{ secrets.PGP_SIGNING_PASSWORD }}
+          SIGNING_ENABLED: ${{ secrets.SIGNING_ENABLED }}
+        shell: bash
+        run: |
+          ./gradlew publishReleasePublicationToLocalRepository --scan
+      - name: zip artifacts
+        if: ${{ steps.release.outputs.release_created }}
+        shell: bash
+        run: |
+          find . -type f -name 'maven-metadata.xml*' -delete;
+          cd releases;
+          cp -r ./maven ./ktx;
+          rm -rf ./ktx/io/github/ryunen344/glyph/glyph-ktx;
+          cp -r ./maven ./compose;
+          rm -rf ./compose/io/github/ryunen344/glyph/glyph-compose;
+          cd ktx && zip -r ktx.zip ./io && cd ..;
+          cd compose && zip -r compose.zip ./io && cd ..;
+      - name: uploads artifacts
+        if: ${{ steps.release.outputs.release_created }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          gh release upload ${{ steps.release.outputs.tag_name }} releases/ktx/ktx.zip releases/compose/compose.zip --clobber
