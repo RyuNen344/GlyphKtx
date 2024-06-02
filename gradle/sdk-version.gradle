@@ -1,0 +1,54 @@
+import javax.inject.Inject
+
+/**
+ * @see <a href="https://docs.gradle.org/current/userguide/configuration_cache.html#config_cache:requirements:external_processes">config_cache:requirements:external_processes</a>
+ */
+//def gitSubmoduleHash = providers.exec { commandLine("git", "rev-parse", "HEAD:Glyph-Developer-Kit") }.standardOutput.asText.get()
+//
+//println(gitSubmoduleHash)
+
+abstract class GitSubmoduleHashValueSource implements ValueSource<String, org.gradle.api.provider.ValueSourceParameters.None> {
+    @Inject
+    abstract ExecOperations getExecOperations()
+
+    @Override
+    String obtain() {
+        ByteArrayOutputStream output = new ByteArrayOutputStream()
+        execOperations.exec {
+            it.commandLine "git", "rev-parse", "HEAD:Glyph-Developer-Kit"
+            it.standardOutput = output
+        }
+        return new String(output.toByteArray())
+    }
+}
+
+class GenerateVersionFileTask extends DefaultTask {
+
+    @OutputDirectory
+    File outputDir
+
+    @Input
+    String packageName
+
+    @TaskAction
+    def invoke() {
+        outputDir.delete()
+        File packageDir = new File(outputDir, packageName.replace((char) '.', File.separatorChar))
+        packageDir.mkdirs()
+        println outputDir
+        println packageName
+        println packageDir
+
+
+        def hash = gitSubmoduleHashProvider.get()
+        def gitSubmoduleHashProvider = exec {
+            commandLine("git", "rev-parse", "HEAD:Glyph-Developer-Kit")
+        }
+        println(gitSubmoduleHashProvider)
+    }
+}
+
+tasks.register("generateVersionFileTask", GenerateVersionFileTask) {
+    outputDir = project.layout.buildDirectory.dir("sdk-version").get().asFile
+    packageName = android.namespace
+}
