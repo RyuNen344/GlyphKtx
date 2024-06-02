@@ -1,24 +1,18 @@
 import javax.inject.Inject
 
-/**
- * @see <a href="https://docs.gradle.org/current/userguide/configuration_cache.html#config_cache:requirements:external_processes">config_cache:requirements:external_processes</a>
- */
-//def gitSubmoduleHash = providers.exec { commandLine("git", "rev-parse", "HEAD:Glyph-Developer-Kit") }.standardOutput.asText.get()
-//
-//println(gitSubmoduleHash)
-
 abstract class GitSubmoduleHashValueSource implements ValueSource<String, org.gradle.api.provider.ValueSourceParameters.None> {
     @Inject
     abstract ExecOperations getExecOperations()
 
     @Override
     String obtain() {
-        ByteArrayOutputStream output = new ByteArrayOutputStream()
-        execOperations.exec {
-            it.commandLine "git", "rev-parse", "HEAD:Glyph-Developer-Kit"
-            it.standardOutput = output
+        return new ByteArrayOutputStream().withStream { os ->
+            execOperations.exec {
+                it.commandLine "git", "rev-parse", "HEAD:Glyph-Developer-Kit"
+                it.standardOutput = os
+            }
+            os.toString().trim()
         }
-        return new String(output.toByteArray())
     }
 }
 
@@ -30,25 +24,43 @@ class GenerateVersionFileTask extends DefaultTask {
     @Input
     String packageName
 
+    @Input
+    String gitSubmoduleHash
+
+    {
+        group = 'git'
+        description = 'Generate SDK version file'
+    }
+
     @TaskAction
     def invoke() {
         outputDir.delete()
         File packageDir = new File(outputDir, packageName.replace((char) '.', File.separatorChar))
         packageDir.mkdirs()
-        println outputDir
-        println packageName
-        println packageDir
-
-
-        def hash = gitSubmoduleHashProvider.get()
-        def gitSubmoduleHashProvider = exec {
-            commandLine("git", "rev-parse", "HEAD:Glyph-Developer-Kit")
+        File outputFile = new File(packageDir, "Version.kt")
+        def text = "package ${packageName}\n\n/** This value is generated, automatically. Do not modify. **/\npublic const val GLYPH_SDK_VERSION = \"${gitSubmoduleHash}\""
+        new FileOutputStream(outputFile).withStream { os ->
+            os.write(text.getBytes())
         }
-        println(gitSubmoduleHashProvider)
     }
 }
 
-tasks.register("generateVersionFileTask", GenerateVersionFileTask) {
-    outputDir = project.layout.buildDirectory.dir("sdk-version").get().asFile
+def versionDir = project.layout.buildDirectory.dir("sdk-version")
+
+android.sourceSets {
+    main {
+        java.srcDir(versionDir)
+    }
+}
+
+def generateVersionFileTask = tasks.register("generateVersionFileTask", GenerateVersionFileTask) {
+    outputDir = versionDir.get().asFile
     packageName = android.namespace
+    gitSubmoduleHash = providers.of(GitSubmoduleHashValueSource.class) {}.get()
+}
+
+afterEvaluate {
+    tasks.withType(Jar).configureEach { dependsOn(generateVersionFileTask) }
+    tasks.named("compileDebugKotlin").configure { dependsOn(generateVersionFileTask) }
+    tasks.named("compileReleaseKotlin").configure { dependsOn(generateVersionFileTask) }
 }

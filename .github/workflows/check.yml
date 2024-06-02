@@ -36,7 +36,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        module: [ "glyph-ktx", "glyph-compose" ]
+        module: [ "glyph-ktx", "glyph-ktx-compose" ]
     steps:
       - uses: actions/checkout@v4
         with:
