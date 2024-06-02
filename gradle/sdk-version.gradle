@@ -1,0 +1,66 @@
+import javax.inject.Inject
+
+abstract class GitSubmoduleHashValueSource implements ValueSource<String, org.gradle.api.provider.ValueSourceParameters.None> {
+    @Inject
+    abstract ExecOperations getExecOperations()
+
+    @Override
+    String obtain() {
+        return new ByteArrayOutputStream().withStream { os ->
+            execOperations.exec {
+                it.commandLine "git", "rev-parse", "HEAD:Glyph-Developer-Kit"
+                it.standardOutput = os
+            }
+            os.toString().trim()
+        }
+    }
+}
+
+class GenerateVersionFileTask extends DefaultTask {
+
+    @OutputDirectory
+    File outputDir
+
+    @Input
+    String packageName
+
+    @Input
+    String gitSubmoduleHash
+
+    {
+        group = 'git'
+        description = 'Generate SDK version file'
+    }
+
+    @TaskAction
+    def invoke() {
+        outputDir.delete()
+        File packageDir = new File(outputDir, packageName.replace((char) '.', File.separatorChar))
+        packageDir.mkdirs()
+        File outputFile = new File(packageDir, "Version.kt")
+        def text = "package ${packageName}\n\n/** This value is generated, automatically. Do not modify. **/\npublic const val GLYPH_SDK_VERSION = \"${gitSubmoduleHash}\""
+        new FileOutputStream(outputFile).withStream { os ->
+            os.write(text.getBytes())
+        }
+    }
+}
+
+def versionDir = project.layout.buildDirectory.dir("sdk-version")
+
+android.sourceSets {
+    main {
+        java.srcDir(versionDir)
+    }
+}
+
+def generateVersionFileTask = tasks.register("generateVersionFileTask", GenerateVersionFileTask) {
+    outputDir = versionDir.get().asFile
+    packageName = android.namespace
+    gitSubmoduleHash = providers.of(GitSubmoduleHashValueSource.class) {}.get()
+}
+
+afterEvaluate {
+    tasks.withType(Jar).configureEach { dependsOn(generateVersionFileTask) }
+    tasks.named("compileDebugKotlin").configure { dependsOn(generateVersionFileTask) }
+    tasks.named("compileReleaseKotlin").configure { dependsOn(generateVersionFileTask) }
+}

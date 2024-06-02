@@ -42,7 +42,7 @@ develocity {
 rootProject.name = "GlyphKtxRoot"
 include(
     ":glyph-ktx",
-    ":glyph-compose",
+    ":glyph-ktx-compose",
     ":sample-ktx",
-    ":sample-compose"
+    ":sample-ktx-compose"
 )
